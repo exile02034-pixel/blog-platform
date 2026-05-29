@@ -1,0 +1,27 @@
+import jwt from 'jsonwebtoken'
+import User from '../models/userModel.js'
+
+export const protect = async(req, res, next)=>{
+    try{
+        const token = req.cookies.jwt;
+        if(!token){
+            return res.status(401).json({
+                message:"Unathorized user"
+            })
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await User.findById(decoded.id).select("-password");
+        if(!user){
+            return res.status(401).json({
+                message:"Unathorized user"
+            })
+        }
+        req.user = user
+        next();
+    }catch(err){
+        return res.status(400).json({
+            error:err.message
+        })
+    }
+}
